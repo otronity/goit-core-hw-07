@@ -33,7 +33,7 @@ class Birthday(Field):
          # Регулярное выражение для проверки формата DD.MM.YYYY
         pattern = r'^\d{2}\.\d{2}\.\d{4}$'
         if re.match(pattern, value):
-            self.value = datetime.strptime(value, "%d.%m.%Y").date()   
+            self.value = value #datetime.strptime(value, "%d.%m.%Y").date()   
         else:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")  
                
@@ -95,6 +95,9 @@ class AddressBook(UserDict):
                                  for record in self.data.values()])
         return f"Address Book:\n{contacts_str}"
     
+    def string_to_date(self,date_string):
+        return datetime.strptime(date_string, "%d.%m.%Y").date()
+
     def date_to_string(self, date):        
         return date.strftime("%d.%m.%Y")
 
@@ -115,10 +118,11 @@ class AddressBook(UserDict):
         today = date.today()
         days = 7
         for record in self.data.values():
+            birthday = self.string_to_date(record.birthday.value)
             if record.birthday:
-                birthday_this_year = self.adjust_for_weekend(record.birthday.value.replace(year=today.year))
+                birthday_this_year = self.adjust_for_weekend(birthday.replace(year=today.year))
                 if birthday_this_year < today:
-                    birthday_this_year = self.adjust_for_weekend(record.birthday.value.replace(year=today.year + 1))
+                    birthday_this_year = self.adjust_for_weekend(birthday.replace(year=today.year + 1))
                 if birthday_this_year <= self.find_next_weekday(today, days) and birthday_this_year >= today:
                     upcoming_birthdays.append({"name": record.name.value, "birthday": self.date_to_string(birthday_this_year)}) 
         return upcoming_birthdays
