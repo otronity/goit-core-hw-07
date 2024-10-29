@@ -33,7 +33,11 @@ class Birthday(Field):
          # Регулярное выражение для проверки формата DD.MM.YYYY
         pattern = r'^\d{2}\.\d{2}\.\d{4}$'
         if re.match(pattern, value):
-            self.value = value #datetime.strptime(value, "%d.%m.%Y").date()   
+            try:
+                datetime.strptime(value, "%d.%m.%Y").date()
+                self.value = value 
+            except ValueError:
+                raise ValueError("Invalid date format. Use DD.MM.YYYY")  
         else:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")  
                
@@ -57,7 +61,7 @@ class Record:
             raise ValueError(f'Incorrect Phone number {phoneold}')
         for phone in self.phones:
             if phone.value == phoneold:
-                # перевіряємо чи є новий номер вже в перліку телефонів
+                # перевіряємо чи є новий номер вже в переліку телефонів
                 if not any(p.value == phonenew for p in self.phones):
                     phone.change_phone(phonenew)
                 else:
@@ -91,7 +95,7 @@ class AddressBook(UserDict):
         if not self.data:
             return "Address Book is empty."
 
-        contacts_str = "\n".join([f"{record.name.value}: {', '.join(p.value for p in record.phones) if record.phones else 'No phones'}"
+        contacts_str = "\n".join([f"{record.name.value}: {', '.join(p.value for p in record.phones) if record.phones else 'No phones'} birthday: {record.birthday if record.birthday else 'not added'}"
                                  for record in self.data.values()])
         return f"Address Book:\n{contacts_str}"
     
@@ -117,9 +121,9 @@ class AddressBook(UserDict):
         upcoming_birthdays = []
         today = date.today()
         days = 7
-        for record in self.data.values():
-            birthday = self.string_to_date(record.birthday.value)
+        for record in self.data.values():            
             if record.birthday:
+                birthday = self.string_to_date(record.birthday.value)
                 birthday_this_year = self.adjust_for_weekend(birthday.replace(year=today.year))
                 if birthday_this_year < today:
                     birthday_this_year = self.adjust_for_weekend(birthday.replace(year=today.year + 1))
